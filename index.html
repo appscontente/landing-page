@@ -369,6 +369,100 @@
         right: -2%;
       }
 
+      /* Último post do Instagram */
+      .instagram {
+        padding-block: 0 4rem;
+      }
+
+      .post {
+        display: grid;
+        gap: 1.5rem;
+        align-items: center;
+        background: var(--superficie);
+        border: 1px solid var(--borda);
+        border-radius: 1.5rem;
+        padding: 1rem;
+      }
+
+      .post-midia {
+        position: relative;
+        display: grid;
+        place-items: center;
+        aspect-ratio: 4 / 5;
+        border-radius: 1rem;
+        overflow: hidden;
+        background: var(--fundo-alt);
+        color: var(--marca);
+      }
+
+      .post-midia img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 300ms;
+      }
+
+      .post-midia:hover img {
+        transform: scale(1.03);
+      }
+
+      .post-midia > svg {
+        width: 4rem;
+        height: 4rem;
+      }
+
+      .post-video {
+        position: absolute;
+        top: 0.75rem;
+        right: 0.75rem;
+        display: grid;
+        place-items: center;
+        width: 2.25rem;
+        height: 2.25rem;
+        border-radius: 999px;
+        background: rgba(0, 0, 0, 0.55);
+        color: #fff;
+      }
+
+      .post-video svg {
+        width: 1rem;
+        height: 1rem;
+      }
+
+      .post-texto {
+        padding: 0.25rem 0.5rem 0.5rem;
+      }
+
+      .post-rotulo {
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: var(--marca);
+      }
+
+      .post-texto h2 {
+        margin-top: 0.25rem;
+      }
+
+      .post-legenda {
+        margin: 0;
+        color: var(--texto-suave);
+        white-space: pre-line;
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 6;
+        overflow: hidden;
+      }
+
+      .post-data {
+        margin: 0.75rem 0 0;
+        font-size: 0.9rem;
+        color: var(--texto-suave);
+      }
+
+      .post-texto .botao {
+        margin-top: 1.5rem;
+      }
+
       /* Formas de contato */
       .contatos {
         background: var(--fundo-alt);
@@ -488,6 +582,12 @@
           grid-template-columns: repeat(3, 1fr);
         }
 
+        .post {
+          grid-template-columns: minmax(0, 20rem) 1fr;
+          gap: 2.5rem;
+          padding: 1.25rem;
+        }
+
         .logo svg {
           height: 3.5rem;
         }
@@ -580,6 +680,36 @@
         </div>
       </section>
 
+      <section class="instagram" aria-labelledby="titulo-instagram">
+        <div class="container">
+          <article class="post">
+            <a class="post-midia" data-instagram-link href="https://www.instagram.com/casacontente/" target="_blank" rel="noopener" aria-label="Abrir o Instagram da Casa Contente">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+                <rect x="3" y="3" width="18" height="18" rx="5" />
+                <circle cx="12" cy="12" r="4" />
+                <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none" />
+              </svg>
+            </a>
+            <div class="post-texto">
+              <span class="post-rotulo">@casacontente</span>
+              <h2 id="titulo-instagram">Novidades no nosso Instagram</h2>
+              <p class="post-legenda" data-instagram-legenda>
+                Lançamentos, ofertas e inspiração para a sua casa. Siga a gente para não perder nada.
+              </p>
+              <p class="post-data" data-instagram-data hidden></p>
+              <a class="botao botao-contorno" data-instagram-link href="https://www.instagram.com/casacontente/" target="_blank" rel="noopener">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <rect x="3" y="3" width="18" height="18" rx="5" />
+                  <circle cx="12" cy="12" r="4" />
+                  <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none" />
+                </svg>
+                <span data-instagram-botao>Seguir no Instagram</span>
+              </a>
+            </div>
+          </article>
+        </div>
+      </section>
+
       <section class="contatos" aria-labelledby="titulo-contatos">
         <div class="container">
           <h2 id="titulo-contatos">Fale com a gente</h2>
@@ -643,6 +773,60 @@
             window.dataLayer.push({ event: "contato_whatsapp", origem_clique: a.className });
           });
         });
+
+        // Último post do Instagram. O feed vem do Behold (behold.so), que lê o perfil e entrega um JSON
+        // público. Sem o feed configurado (ou se ele falhar), a seção fica como um convite para seguir o perfil.
+        var FEED_INSTAGRAM = "";
+
+        if (FEED_INSTAGRAM && window.fetch) {
+          fetch(FEED_INSTAGRAM)
+            .then(function (r) {
+              if (!r.ok) throw new Error(r.status);
+              return r.json();
+            })
+            .then(function (feed) {
+              var post = (Array.isArray(feed) ? feed : feed.posts || [])[0];
+              if (!post) return;
+              var tamanhos = post.sizes || {};
+              var imagem =
+                (tamanhos.medium && tamanhos.medium.mediaUrl) ||
+                post.thumbnailUrl ||
+                (post.mediaType !== "VIDEO" && post.mediaUrl);
+              if (!imagem) return;
+
+              var midia = document.querySelector(".post-midia");
+              var img = document.createElement("img");
+              img.src = imagem;
+              img.alt = "";
+              img.loading = "lazy";
+              midia.replaceChildren(img);
+              midia.setAttribute("aria-label", "Ver o último post da Casa Contente no Instagram");
+              if (post.mediaType === "VIDEO") {
+                midia.insertAdjacentHTML(
+                  "beforeend",
+                  '<span class="post-video"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7Z" /></svg></span>'
+                );
+              }
+
+              document.querySelectorAll("[data-instagram-link]").forEach(function (a) {
+                a.href = post.permalink;
+              });
+              document.querySelector("[data-instagram-botao]").textContent = "Ver post no Instagram";
+              document.getElementById("titulo-instagram").textContent = "Último post no Instagram";
+
+              var legenda = (post.prunedCaption || post.caption || "").trim();
+              if (legenda) document.querySelector("[data-instagram-legenda]").textContent = legenda;
+
+              var data = document.querySelector("[data-instagram-data]");
+              if (post.timestamp) {
+                data.textContent =
+                  "Publicado em " +
+                  new Date(post.timestamp).toLocaleDateString("pt-BR", { day: "numeric", month: "long" });
+                data.hidden = false;
+              }
+            })
+            .catch(function () {});
+        }
 
         var ano = document.querySelector("[data-ano]");
         if (ano) ano.textContent = String(new Date().getFullYear());
